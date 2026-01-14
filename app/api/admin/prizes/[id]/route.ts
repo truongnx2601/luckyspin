@@ -1,14 +1,19 @@
 import { prisma } from '@/lib/prisma'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+
+type RouteCtx = {
+  params: Promise<{ id: string }>
+}
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: RouteCtx
 ) {
+  const { id } = await params
   const { name, total, weight, isActive } = await req.json()
 
   const prize = await prisma.prize.findUnique({
-    where: { id: params.id },
+    where: { id },
   })
 
   if (!prize) {
@@ -19,7 +24,7 @@ export async function PATCH(
   const diff = newTotal - prize.total
 
   const updated = await prisma.prize.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       name,
       total: newTotal,
@@ -33,11 +38,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  { params }: RouteCtx
 ) {
+  const { id } = await params
+
   await prisma.prize.delete({
-    where: { id: params.id },
+    where: { id },
   })
 
   return NextResponse.json({ ok: true })
