@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Campaign {
+  id         String   @id @default(cuid())
+  name       String
+  prefix     String
+  isActive   Boolean  @default(true)
+  maxVoucher Int
+  createdAt  DateTime @default(now())
+
+  vouchers Voucher[]
+  prizes   Prize[]
+}
+
+model Employee {
+  id           String   @id @default(cuid())
+  employeeCode String   @unique
+  phone        String
+  fullName     String
+  center       String
+  createdAt    DateTime @default(now())
+
+  vouchers Voucher[]
+}
+
+model Voucher {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  campaignId String
+  employeeId String
+  isUsed     Boolean   @default(false)
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  spinResults SpinResult[]
+
+  @@unique([campaignId, employeeId])
+}
+
+model Prize {
+  id         String   @id @default(cuid())
+  campaignId String
+  name       String
+  total      Int
+  remaining  Int
+  weight     Int
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  campaign    Campaign     @relation(fields: [campaignId], references: [id])
+  spinResults SpinResult[]
+}
+
+model SpinResult {
+  id        String   @id @default(cuid())
+  voucherId String   @unique
+  prizeId   String
+  prizeName String
+  createdAt DateTime @default(now())
+
+  voucher Voucher @relation(fields: [voucherId], references: [id])
+  prize   Prize   @relation(fields: [prizeId], references: [id])
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   
+  createdAt DateTime @default(now())
+}
